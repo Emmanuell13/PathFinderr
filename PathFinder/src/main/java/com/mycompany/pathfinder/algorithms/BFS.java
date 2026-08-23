@@ -8,6 +8,6 @@ package com.mycompany.pathfinder.algorithms;
  *
  * @author Haidar
  */
-public class BFS {
+public class BFS implements PathFinderAlgorithm {
     
 }

@@ -8,6 +8,6 @@ package com.mycompany.pathfinder.algorithms;
  *
  * @author Haidar
  */
-public class Dijkstra {
+public class Dijkstra implements PathFinderAlgorithm {
     
 }
