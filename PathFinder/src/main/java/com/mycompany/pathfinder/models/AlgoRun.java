@@ -2,14 +2,14 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.mycompany.model;
+package com.mycompany.pathfinder.models;
 
 /**
  *
  * @author HP
  */
 
-import model.enums.AlgorithmType;
+import com.mycompany.pathfinder.model.enums.AlgorithmType;
 
 public class AlgoRun {
 
