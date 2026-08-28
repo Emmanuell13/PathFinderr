@@ -10,4 +10,9 @@ package com.mycompany.pathfinder.algorithms;
  */
 public class Dijkstra implements PathFinderAlgorithm {
     
+    @Override
+    public PathFinder findPath(Grid grid) {
+        
+    }
+    
 }

@@ -10,4 +10,9 @@ package com.mycompany.pathfinder.algorithms;
  */
 public class DFS implements PathFinderAlgorithm {
     
+    @Override
+    public PathFinder findPath(Grid grid) {
+        
+    }
+    
 }

@@ -21,7 +21,7 @@ import java.util.Set;
 public class BFS implements PathFinderAlgorithm {
     
     @Override
-    public PathResult FindPath(Grid grid) {
+    public PathResult findPath(Grid grid) {
         
         Queue<Cell> queue = new LinkedList<>();
         

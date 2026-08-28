@@ -10,4 +10,9 @@ package com.mycompany.pathfinder.algorithms;
  */
 public class AStar implements PathFinderAlgorithm {
     
+    @Override
+    public PathFinder findPath(Grid grid) {
+        
+    }
+    
 }
