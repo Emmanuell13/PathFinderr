@@ -9,6 +9,8 @@ package com.mycompany.pathfinder.grid;
  * @author Admin
  */
 
+
+
 public class Cell {
 
     private final int row;
@@ -39,6 +41,18 @@ public class Cell {
 
     public boolean isWall() {
         return state == CellState.WALL;
+    }
+
+    public boolean isEmpty() {
+        return state == CellState.EMPTY;
+    }
+
+    public boolean isStart() {
+        return state == CellState.START;
+    }
+
+    public boolean isEnd() {
+        return state == CellState.END;
     }
 
     public void toggleWall() {
