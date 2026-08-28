@@ -10,6 +10,6 @@ package com.mycompany.pathfinder.algorithms;
  */
 public interface PathFinderAlgorithm {
     
-    
+    PathResult FindPath(Grid grid);
     
 }
