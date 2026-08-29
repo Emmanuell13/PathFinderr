@@ -9,17 +9,22 @@ package com.mycompany.pathfinder;
  * @author Admin
  */
 
-
-
-
-
-
+import com.mycompany.pathfinder.grid.AlgorithmType;
 import com.mycompany.pathfinder.grid.Cell;
 import com.mycompany.pathfinder.grid.CellState;
 import com.mycompany.pathfinder.grid.Grid;
 
+import com.mycompany.pathfinder.algorithms.BFS;
+import com.mycompany.pathfinder.algorithms.DFS;
+import com.mycompany.pathfinder.algorithms.Dijkstra;
+import com.mycompany.pathfinder.algorithms.AStar;
+import com.mycompany.pathfinder.algorithms.PathFinderAlgorithm;
+import com.mycompany.pathfinder.algorithms.PathResult;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 
@@ -30,11 +35,24 @@ public class MainController {
 
     @FXML
     private Button startButton;
-
     @FXML
     private Button endButton;
     @FXML
+    private Button launchButton;
+    @FXML
     private Button resetButton;
+    
+    @FXML
+    private Label exploredLabel;
+
+    @FXML
+    private Label pathLengthLabel;
+
+    @FXML
+    private Label timeLabel;
+    
+    @FXML
+    private ComboBox<AlgorithmType> algorithmComboBox;
 
     private Grid grid;
 
@@ -55,7 +73,14 @@ public class MainController {
         grid.generateRandomWalls();
 
         createGrid();
-
+        
+        algorithmComboBox.getItems().addAll(
+            AlgorithmType.BFS,
+            AlgorithmType.DFS,
+            AlgorithmType.DIJKSTRA,
+            AlgorithmType.ASTAR
+        );
+        
         // Bouton "Placer départ"
         startButton.setOnAction(event -> {
             placingStart = true;
@@ -71,7 +96,12 @@ public class MainController {
 
             System.out.println("Choisissez une case pour l'arrivée.");
         });
-         resetButton.setOnAction(event -> {
+        
+        launchButton.setOnAction(event -> {
+            runAlgorithm();
+        });
+        
+        resetButton.setOnAction(event -> {
         resetGrid();
     });
     }
@@ -165,6 +195,61 @@ public class MainController {
                 + cell.getColumn()
             );
         }
+    }
+    
+    @FXML
+    private void runAlgorithm() {
+
+        AlgorithmType selected = algorithmComboBox.getValue();
+        PathFinderAlgorithm algorithm = null;
+
+        if (selected == null) {
+            System.out.println("Please select an algorithm.");
+            return;
+        }
+        
+        switch (selected) {
+
+            case BFS:
+                algorithm = new BFS();
+                break;
+
+            case DFS:
+                algorithm = new DFS();
+                break;
+
+            case DIJKSTRA:
+                algorithm = new Dijkstra();
+                break;
+
+            case ASTAR:
+                algorithm = new AStar();
+                break;
+        }
+        
+        long startTime = System.nanoTime();
+
+        PathResult result = algorithm.findPath(grid);
+
+        long endTime = System.nanoTime();
+
+        double executionTime = (endTime - startTime) / 1_000_000.0;
+
+        int cellsExplored = result.getExploredCells().size();
+
+        int pathLength = result.getPath().size();
+
+        exploredLabel.setText(
+                String.valueOf(cellsExplored)
+        );
+
+        pathLengthLabel.setText(
+                String.valueOf(pathLength)
+        );
+
+        timeLabel.setText(
+                String.format("%.3f ms", executionTime)
+        );
     }
 
     private void refreshGrid() {
