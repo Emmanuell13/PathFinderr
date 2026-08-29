@@ -23,6 +23,8 @@ public class BFS implements PathFinderAlgorithm {
     @Override
     public PathResult findPath(Grid grid) {
         
+        long startTime = System.nanoTime();
+        
         Queue<Cell> queue = new LinkedList<>();
         
         Set<Cell> visited = new HashSet<>();
@@ -72,8 +74,11 @@ public class BFS implements PathFinderAlgorithm {
         }
         
         List<Cell> path = reconstructPath(parent, start, end);
+        
+        long endTime = System.nanoTime();
+        double executionTime = (endTime - startTime) / 1_000_000.0;
 
-        return new PathResult(exploredCells, path);
+        return new PathResult(exploredCells, path, executionTime);
         
     }
     
