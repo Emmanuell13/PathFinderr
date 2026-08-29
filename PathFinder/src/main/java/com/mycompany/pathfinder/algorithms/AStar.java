@@ -13,8 +13,8 @@ import com.mycompany.pathfinder.grid.Grid;
 public class AStar implements PathFinderAlgorithm {
     
     @Override
-    public PathFinder findPath(Grid grid) {
-        
+    public PathResult findPath(Grid grid) {
+        return null;
     }
     
 }

@@ -36,8 +36,8 @@ public class BFS implements PathFinderAlgorithm {
         
         List<Cell> exploredCells = new ArrayList<>();
         
-        Cell start = findStart(grid);
-        Cell end = findEnd(grid);
+        Cell start = grid.findStart(grid);
+        Cell end = grid.findEnd(grid);
         
         if(start == null || end == null) {
             return new PathResult(exploredCells, new ArrayList<>(), 0);
@@ -55,7 +55,7 @@ public class BFS implements PathFinderAlgorithm {
                 break;
             }
             
-            List<Cell> neighbours = getNeighbours(current, grid);
+            List<Cell> neighbours = grid.getNeighbors(current);
             
             for(Cell neighbour : neighbours) {
                 
@@ -85,33 +85,6 @@ public class BFS implements PathFinderAlgorithm {
         
     }
     
-    private List<Cell> getNeighbours(Cell current, Grid grid) {
-        
-        List<Cell> neighbours = new ArrayList<>();
-        
-        int row = current.getRow();
-        int col = current.getColumn();
-        
-        if(row > 0) {
-            neighbours.add(grid.getCell(row - 1, col));
-        }
-        
-        if(row < Grid.ROWS - 1) {
-            neighbours.add(grid.getCell(row + 1, col));
-        }
-        
-        if(col > 0) {
-            neighbours.add(grid.getCell(row, col - 1));
-        }
-        
-        if(col > Grid.COLUMNS - 1) {
-            neighbours.add(grid.getCell(row, col + 1));
-        }
-        
-        return neighbours;
-        
-    }
-    
     private List<Cell> reconstructPath(Map<Cell, Cell> parent, Cell start, Cell end) {
 
         List<Cell> path = new ArrayList<>();
@@ -136,40 +109,5 @@ public class BFS implements PathFinderAlgorithm {
         Collections.reverse(path);
 
         return path;
-    }
-    
-    private Cell findStart(Grid grid) {
-
-        for (int row = 0; row < Grid.ROWS; row++) {
-
-            for (int column = 0; column < Grid.COLUMNS; column++) {
-
-                Cell cell = grid.getCell(row, column);
-
-                if (cell.getState() == CellState.START) {
-                    return cell;
-                }
-            }
-        }
-
-        return null;
-    }
-
-
-    private Cell findEnd(Grid grid) {
-
-        for (int row = 0; row < Grid.ROWS; row++) {
-
-            for (int column = 0; column < Grid.COLUMNS; column++) {
-
-                Cell cell = grid.getCell(row, column);
-
-                if (cell.getState() == CellState.END) {
-                    return cell;
-                }
-            }
-        }
-
-        return null;
     }
 }

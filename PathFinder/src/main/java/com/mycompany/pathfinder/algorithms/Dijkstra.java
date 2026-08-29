@@ -4,6 +4,8 @@
  */
 package com.mycompany.pathfinder.algorithms;
 
+import com.mycompany.pathfinder.grid.Grid;
+
 /**
  *
  * @author Haidar
@@ -11,8 +13,8 @@ package com.mycompany.pathfinder.algorithms;
 public class Dijkstra implements PathFinderAlgorithm {
     
     @Override
-    public PathFinder findPath(Grid grid) {
-        
+    public PathResult findPath(Grid grid) {
+        return null;
     }
     
 }
