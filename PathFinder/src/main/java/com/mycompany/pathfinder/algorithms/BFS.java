@@ -4,6 +4,9 @@
  */
 package com.mycompany.pathfinder.algorithms;
 
+import com.mycompany.pathfinder.grid.Cell;
+import com.mycompany.pathfinder.grid.CellState;
+import com.mycompany.pathfinder.grid.Grid;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -66,7 +69,7 @@ public class BFS implements PathFinderAlgorithm {
                 
                 visited.add(neighbour);
                 
-                parent.putAll(neighbour, current);
+                parent.put(neighbour, current);
                 
                 queue.add(neighbour);
                 

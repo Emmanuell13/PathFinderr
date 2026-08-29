@@ -4,6 +4,8 @@
  */
 package com.mycompany.pathfinder.algorithms;
 
+import com.mycompany.pathfinder.grid.Grid;
+
 /**
  *
  * @author Haidar

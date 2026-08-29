@@ -4,6 +4,7 @@
  */
 package com.mycompany.pathfinder.algorithms;
 
+import com.mycompany.pathfinder.grid.Cell;
 import java.util.List;
 
 /**
