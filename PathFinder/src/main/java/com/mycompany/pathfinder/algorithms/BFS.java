@@ -36,8 +36,8 @@ public class BFS implements PathFinderAlgorithm {
         
         List<Cell> exploredCells = new ArrayList<>();
         
-        Cell start = grid.findStart(grid);
-        Cell end = grid.findEnd(grid);
+        Cell start = grid.getStart();
+        Cell end = grid.getEnd();
         
         if(start == null || end == null) {
             return new PathResult(exploredCells, new ArrayList<>(), 0);
