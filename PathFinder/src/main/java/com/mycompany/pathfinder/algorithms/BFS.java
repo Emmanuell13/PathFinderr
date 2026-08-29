@@ -29,7 +29,7 @@ public class BFS implements PathFinderAlgorithm {
         
         Set<Cell> visited = new HashSet<>();
         
-        Map<Cell, Cell> parent = HashMap<>();
+        Map<Cell, Cell> parent = new HashMap<>();
         
         List<Cell> exploredCells = new ArrayList<>();
         
@@ -37,7 +37,7 @@ public class BFS implements PathFinderAlgorithm {
         Cell end = findEnd(grid);
         
         if(start == null || end == null) {
-            return new PathResult(exploredCells, new ArrayList<>());
+            return new PathResult(exploredCells, new ArrayList<>(), 0);
         }
         
         queue.add(start);
@@ -56,7 +56,7 @@ public class BFS implements PathFinderAlgorithm {
             
             for(Cell neighbour : neighbours) {
                 
-                if (neighbour.getType() == CellType.WALL) {
+                if (neighbour.getState() == CellState.WALL) {
                     continue;
                 }
                 
@@ -87,13 +87,13 @@ public class BFS implements PathFinderAlgorithm {
         List<Cell> neighbours = new ArrayList<>();
         
         int row = current.getRow();
-        int col = current.getCol();
+        int col = current.getColumn();
         
         if(row > 0) {
             neighbours.add(grid.getCell(row - 1, col));
         }
         
-        if(row < grid.ROWS - 1) {
+        if(row < Grid.ROWS - 1) {
             neighbours.add(grid.getCell(row + 1, col));
         }
         
@@ -101,7 +101,7 @@ public class BFS implements PathFinderAlgorithm {
             neighbours.add(grid.getCell(row, col - 1));
         }
         
-        if(col > grid.COLUMNS - 1) {
+        if(col > Grid.COLUMNS - 1) {
             neighbours.add(grid.getCell(row, col + 1));
         }
         
@@ -143,7 +143,7 @@ public class BFS implements PathFinderAlgorithm {
 
                 Cell cell = grid.getCell(row, column);
 
-                if (cell.getType() == CellType.START) {
+                if (cell.getState() == CellState.START) {
                     return cell;
                 }
             }
@@ -161,7 +161,7 @@ public class BFS implements PathFinderAlgorithm {
 
                 Cell cell = grid.getCell(row, column);
 
-                if (cell.getType() == CellType.END) {
+                if (cell.getState() == CellState.END) {
                     return cell;
                 }
             }
@@ -169,5 +169,4 @@ public class BFS implements PathFinderAlgorithm {
 
         return null;
     }
-    
 }
