@@ -21,12 +21,18 @@ import com.mycompany.pathfinder.algorithms.AStar;
 import com.mycompany.pathfinder.algorithms.PathFinderAlgorithm;
 import com.mycompany.pathfinder.algorithms.PathResult;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.RowConstraints;
+import javafx.util.Duration;
 
 public class MainController {
 
@@ -35,13 +41,16 @@ public class MainController {
 
     @FXML
     private Button startButton;
+
     @FXML
     private Button endButton;
+
     @FXML
     private Button launchButton;
+
     @FXML
     private Button resetButton;
-    
+
     @FXML
     private Label exploredLabel;
 
@@ -50,7 +59,7 @@ public class MainController {
 
     @FXML
     private Label timeLabel;
-    
+
     @FXML
     private ComboBox<AlgorithmType> algorithmComboBox;
 
@@ -61,6 +70,11 @@ public class MainController {
 
     private Cell startCell = null;
     private Cell endCell = null;
+
+    private Region[][] visualCells =
+            new Region[Grid.ROWS][Grid.COLUMNS];
+
+    private Timeline animation;
 
     @FXML
     public void initialize() {
@@ -73,65 +87,167 @@ public class MainController {
         grid.generateRandomWalls();
 
         createGrid();
-        
+
         algorithmComboBox.getItems().addAll(
-            AlgorithmType.BFS,
-            AlgorithmType.DFS,
-            AlgorithmType.DIJKSTRA,
-            AlgorithmType.ASTAR
+                AlgorithmType.BFS,
+                AlgorithmType.DFS,
+                AlgorithmType.DIJKSTRA,
+                AlgorithmType.ASTAR
         );
-        
+
+        // Dijkstra sélectionné par défaut
+        algorithmComboBox.setValue(
+                AlgorithmType.DIJKSTRA
+        );
+
         // Bouton "Placer départ"
         startButton.setOnAction(event -> {
+
             placingStart = true;
             placingEnd = false;
 
-            System.out.println("Choisissez une case pour le départ.");
+            System.out.println(
+                    "Choisissez une case pour le départ."
+            );
         });
 
         // Bouton "Placer arrivée"
         endButton.setOnAction(event -> {
+
             placingEnd = true;
             placingStart = false;
 
-            System.out.println("Choisissez une case pour l'arrivée.");
+            System.out.println(
+                    "Choisissez une case pour l'arrivée."
+            );
         });
-        
+
+        // Bouton "Lancer"
         launchButton.setOnAction(event -> {
+
             runAlgorithm();
+
         });
-        
+
+        // Bouton "Réinitialiser"
         resetButton.setOnAction(event -> {
-        resetGrid();
-    });
+
+            resetGrid();
+
+        });
     }
 
     private void createGrid() {
 
-        double cellWidth = 650.0 / Grid.COLUMNS;
-        double cellHeight = 480.0 / Grid.ROWS;
+        gridPane.getChildren().clear();
 
-        for (int row = 0; row < Grid.ROWS; row++) {
+        gridPane.getColumnConstraints().clear();
+        gridPane.getRowConstraints().clear();
 
-            for (int column = 0; column < Grid.COLUMNS; column++) {
+        gridPane.setHgap(0);
+        gridPane.setVgap(0);
 
-                Cell modelCell = grid.getCell(row, column);
+        // Création des 25 colonnes
+        for (int column = 0;
+                column < Grid.COLUMNS;
+                column++) {
 
-                Region visualCell = new Region();
+            ColumnConstraints columnConstraints =
+                    new ColumnConstraints();
 
-                visualCell.setPrefWidth(cellWidth);
-                visualCell.setPrefHeight(cellHeight);
+            columnConstraints.setPercentWidth(
+                    100.0 / Grid.COLUMNS
+            );
 
-                updateCellStyle(visualCell, modelCell);
+            columnConstraints.setHgrow(
+                    Priority.ALWAYS
+            );
 
-                // Clic sur une cellule
+            gridPane.getColumnConstraints().add(
+                    columnConstraints
+            );
+        }
+
+        // Création des 20 lignes
+        for (int row = 0;
+                row < Grid.ROWS;
+                row++) {
+
+            RowConstraints rowConstraints =
+                    new RowConstraints();
+
+            rowConstraints.setPercentHeight(
+                    100.0 / Grid.ROWS
+            );
+
+            rowConstraints.setVgrow(
+                    Priority.ALWAYS
+            );
+
+            gridPane.getRowConstraints().add(
+                    rowConstraints
+            );
+        }
+
+        // Création des cases
+        for (int row = 0;
+                row < Grid.ROWS;
+                row++) {
+
+            for (int column = 0;
+                    column < Grid.COLUMNS;
+                    column++) {
+
+                Cell modelCell =
+                        grid.getCell(
+                                row,
+                                column
+                        );
+
+                Region visualCell =
+                        new Region();
+
+                visualCell.setMinSize(
+                        0,
+                        0
+                );
+
+                visualCell.setMaxSize(
+                        Double.MAX_VALUE,
+                        Double.MAX_VALUE
+                );
+
+                GridPane.setHgrow(
+                        visualCell,
+                        Priority.ALWAYS
+                );
+
+                GridPane.setVgrow(
+                        visualCell,
+                        Priority.ALWAYS
+                );
+
+                updateCellStyle(
+                        visualCell,
+                        modelCell
+                );
+
+                visualCells[row][column] =
+                        visualCell;
+
                 visualCell.setOnMouseClicked(event -> {
 
-                    handleCellClick(modelCell);
+                    handleCellClick(
+                            modelCell
+                    );
 
                 });
 
-                gridPane.add(visualCell, column, row);
+                gridPane.add(
+                        visualCell,
+                        column,
+                        row
+                );
             }
         }
     }
@@ -141,17 +257,25 @@ public class MainController {
         // Placement du départ
         if (placingStart) {
 
-            if (cell.isWall() || cell.isEnd()) {
+            if (cell.isWall()
+                    || cell.isEnd()) {
+
                 return;
             }
 
             // Supprimer l'ancien départ
             if (startCell != null) {
-                startCell.setState(CellState.EMPTY);
+
+                startCell.setState(
+                        CellState.EMPTY
+                );
             }
 
             // Créer le nouveau départ
-            cell.setState(CellState.START);
+            cell.setState(
+                    CellState.START
+            );
+
             startCell = cell;
 
             placingStart = false;
@@ -159,10 +283,10 @@ public class MainController {
             refreshGrid();
 
             System.out.println(
-                "Départ : ligne "
-                + cell.getRow()
-                + ", colonne "
-                + cell.getColumn()
+                    "Départ : ligne "
+                    + cell.getRow()
+                    + ", colonne "
+                    + cell.getColumn()
             );
 
             return;
@@ -171,17 +295,25 @@ public class MainController {
         // Placement de l'arrivée
         if (placingEnd) {
 
-            if (cell.isWall() || cell.isStart()) {
+            if (cell.isWall()
+                    || cell.isStart()) {
+
                 return;
             }
 
             // Supprimer l'ancienne arrivée
             if (endCell != null) {
-                endCell.setState(CellState.EMPTY);
+
+                endCell.setState(
+                        CellState.EMPTY
+                );
             }
 
             // Créer la nouvelle arrivée
-            cell.setState(CellState.END);
+            cell.setState(
+                    CellState.END
+            );
+
             endCell = cell;
 
             placingEnd = false;
@@ -189,104 +321,362 @@ public class MainController {
             refreshGrid();
 
             System.out.println(
-                "Arrivée : ligne "
-                + cell.getRow()
-                + ", colonne "
-                + cell.getColumn()
+                    "Arrivée : ligne "
+                    + cell.getRow()
+                    + ", colonne "
+                    + cell.getColumn()
             );
         }
     }
-    
+
     @FXML
     private void runAlgorithm() {
 
-        AlgorithmType selected = algorithmComboBox.getValue();
+        AlgorithmType selected =
+                algorithmComboBox.getValue();
+
         PathFinderAlgorithm algorithm = null;
 
         if (selected == null) {
-            System.out.println("Please select an algorithm.");
+
+            System.out.println(
+                    "Veuillez sélectionner un algorithme."
+            );
+
             return;
         }
-        
+
+        if (grid.getStart() == null
+                || grid.getEnd() == null) {
+
+            System.out.println(
+                    "Veuillez placer un départ et une arrivée."
+            );
+
+            return;
+        }
+
+        // Arrêter une animation précédente
+        if (animation != null) {
+
+            animation.stop();
+
+        }
+
+        // Effacer l'ancien résultat
+        clearAlgorithmStates();
+
         switch (selected) {
 
             case BFS:
+
                 algorithm = new BFS();
+
                 break;
 
             case DFS:
+
                 algorithm = new DFS();
+
                 break;
 
             case DIJKSTRA:
+
                 algorithm = new Dijkstra();
+
                 break;
 
             case ASTAR:
+
                 algorithm = new AStar();
+
                 break;
         }
-        
-        long startTime = System.nanoTime();
 
-        PathResult result = algorithm.findPath(grid);
+        long startTime =
+                System.nanoTime();
 
-        long endTime = System.nanoTime();
+        PathResult result =
+                algorithm.findPath(grid);
 
-        double executionTime = (endTime - startTime) / 1_000_000.0;
+        long endTime =
+                System.nanoTime();
 
-        int cellsExplored = result.getExploredCells().size();
+        double executionTime =
+                (endTime - startTime)
+                / 1_000_000.0;
 
-        int pathLength = result.getPath().size();
+        int cellsExplored =
+                result.getExploredCells().size();
+
+        int pathLength =
+                result.getPath().size();
 
         exploredLabel.setText(
-                String.valueOf(cellsExplored)
+                String.valueOf(
+                        cellsExplored
+                )
         );
 
         pathLengthLabel.setText(
-                String.valueOf(pathLength)
+                String.valueOf(
+                        pathLength
+                )
         );
 
         timeLabel.setText(
-                String.format("%.3f ms", executionTime)
+                String.format(
+                        "%.3f ms",
+                        executionTime
+                )
         );
+
+        // Lancer l'animation
+        animateResult(
+                result
+        );
+    }
+
+    private void animateResult(
+            PathResult result) {
+
+        animation =
+                new Timeline();
+
+        int step = 0;
+
+        // Affichage progressif des cases explorées
+        for (Cell cell :
+                result.getExploredCells()) {
+
+            if (!cell.isStart()
+                    && !cell.isEnd()
+                    && !cell.isWall()) {
+
+                final Cell currentCell =
+                        cell;
+
+                KeyFrame frame =
+                        new KeyFrame(
+
+                    Duration.millis(
+                            step * 12
+                    ),
+
+                    event -> {
+
+                        currentCell.setState(
+                                CellState.EXPLORED
+                        );
+
+                        updateVisualCell(
+                                currentCell
+                        );
+                    }
+                );
+
+                animation
+                        .getKeyFrames()
+                        .add(frame);
+
+                step++;
+            }
+        }
+
+        // Petite pause avant l'affichage du chemin
+        step += 8;
+
+        // Affichage progressif du chemin
+        for (Cell cell :
+                result.getPath()) {
+
+            if (!cell.isStart()
+                    && !cell.isEnd()
+                    && !cell.isWall()) {
+
+                final Cell currentCell =
+                        cell;
+
+                KeyFrame frame =
+                        new KeyFrame(
+
+                    Duration.millis(
+                            step * 12
+                    ),
+
+                    event -> {
+
+                        currentCell.setState(
+                                CellState.PATH
+                        );
+
+                        updateVisualCell(
+                                currentCell
+                        );
+                    }
+                );
+
+                animation
+                        .getKeyFrames()
+                        .add(frame);
+
+                step += 3;
+            }
+        }
+
+        launchButton.setDisable(
+                true
+        );
+
+        animation.setOnFinished(event -> {
+
+            launchButton.setDisable(
+                    false
+            );
+
+        });
+
+        animation.play();
+    }
+
+    private void updateVisualCell(
+            Cell cell) {
+
+        Region visualCell =
+                visualCells
+                [cell.getRow()]
+                [cell.getColumn()];
+
+        if (visualCell != null) {
+
+            updateCellStyle(
+                    visualCell,
+                    cell
+            );
+        }
+    }
+
+    private void clearAlgorithmStates() {
+
+        for (int row = 0;
+                row < Grid.ROWS;
+                row++) {
+
+            for (int column = 0;
+                    column < Grid.COLUMNS;
+                    column++) {
+
+                Cell cell =
+                        grid.getCell(
+                                row,
+                                column
+                        );
+
+                if (cell.getState()
+                        == CellState.EXPLORED
+                        || cell.getState()
+                        == CellState.PATH) {
+
+                    cell.setState(
+                            CellState.EMPTY
+                    );
+                }
+            }
+        }
+
+        refreshGrid();
     }
 
     private void refreshGrid() {
 
-        gridPane.getChildren().clear();
+        for (int row = 0;
+                row < Grid.ROWS;
+                row++) {
 
-        createGrid();
+            for (int column = 0;
+                    column < Grid.COLUMNS;
+                    column++) {
+
+                Cell cell =
+                        grid.getCell(
+                                row,
+                                column
+                        );
+
+                Region visualCell =
+                        visualCells
+                        [row]
+                        [column];
+
+                if (visualCell != null) {
+
+                    updateCellStyle(
+                            visualCell,
+                            cell
+                    );
+                }
+            }
+        }
     }
+
     private void resetGrid() {
 
-    grid = new Grid();
+        if (animation != null) {
 
-    grid.generateRandomWalls();
+            animation.stop();
 
-    startCell = null;
-    endCell = null;
+        }
 
-    placingStart = false;
-    placingEnd = false;
+        grid = new Grid();
 
-    gridPane.getChildren().clear();
+        grid.generateRandomWalls();
 
-    createGrid();
+        startCell = null;
+        endCell = null;
 
-    System.out.println("Grille réinitialisée !");
-}
+        placingStart = false;
+        placingEnd = false;
 
-    private void updateCellStyle(Region visualCell, Cell cell) {
+        exploredLabel.setText(
+                "0"
+        );
+
+        pathLengthLabel.setText(
+                "0"
+        );
+
+        timeLabel.setText(
+                "0 ms"
+        );
+
+        visualCells =
+                new Region
+                [Grid.ROWS]
+                [Grid.COLUMNS];
+
+        createGrid();
+
+        launchButton.setDisable(
+                false
+        );
+
+        System.out.println(
+                "Grille réinitialisée !"
+        );
+    }
+
+    private void updateCellStyle(
+            Region visualCell,
+            Cell cell) {
 
         switch (cell.getState()) {
 
             case START:
 
                 visualCell.setStyle(
-                    "-fx-background-color: green;" +
-                    "-fx-border-color: lightgray;" +
-                    "-fx-border-width: 0.5;"
+                    "-fx-background-color: green;"
+                    + "-fx-border-color: lightgray;"
+                    + "-fx-border-width: 0.5;"
                 );
 
                 break;
@@ -294,9 +684,9 @@ public class MainController {
             case END:
 
                 visualCell.setStyle(
-                    "-fx-background-color: red;" +
-                    "-fx-border-color: lightgray;" +
-                    "-fx-border-width: 0.5;"
+                    "-fx-background-color: red;"
+                    + "-fx-border-color: lightgray;"
+                    + "-fx-border-width: 0.5;"
                 );
 
                 break;
@@ -304,9 +694,29 @@ public class MainController {
             case WALL:
 
                 visualCell.setStyle(
-                    "-fx-background-color: darkgray;" +
-                    "-fx-border-color: lightgray;" +
-                    "-fx-border-width: 0.5;"
+                    "-fx-background-color: darkgray;"
+                    + "-fx-border-color: lightgray;"
+                    + "-fx-border-width: 0.5;"
+                );
+
+                break;
+
+            case EXPLORED:
+
+                visualCell.setStyle(
+                    "-fx-background-color: lightblue;"
+                    + "-fx-border-color: lightgray;"
+                    + "-fx-border-width: 0.5;"
+                );
+
+                break;
+
+            case PATH:
+
+                visualCell.setStyle(
+                    "-fx-background-color: gold;"
+                    + "-fx-border-color: lightgray;"
+                    + "-fx-border-width: 0.5;"
                 );
 
                 break;
@@ -314,9 +724,9 @@ public class MainController {
             default:
 
                 visualCell.setStyle(
-                    "-fx-background-color: white;" +
-                    "-fx-border-color: lightgray;" +
-                    "-fx-border-width: 0.5;"
+                    "-fx-background-color: white;"
+                    + "-fx-border-color: lightgray;"
+                    + "-fx-border-width: 0.5;"
                 );
 
                 break;
