@@ -83,4 +83,36 @@ public class Grid {
 
         return neighbors;
     }
+     
+     public Cell getStart() {
+
+        for (int row = 0; row < ROWS; row++) {
+            for (int column = 0; column < COLUMNS; column++) {
+
+                Cell cell = cells[row][column];
+
+                if (cell.getState() == CellState.START) {
+                    return cell;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public Cell getEnd() {
+
+        for (int row = 0; row < ROWS; row++) {
+            for (int column = 0; column < COLUMNS; column++) {
+
+                Cell cell = cells[row][column];
+
+                if (cell.getState() == CellState.END) {
+                    return cell;
+                }
+            }
+        }
+
+        return null;
+    }
 }
