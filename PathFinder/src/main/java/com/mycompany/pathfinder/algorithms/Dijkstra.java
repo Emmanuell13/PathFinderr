@@ -28,7 +28,7 @@ public class Dijkstra implements PathFinderAlgorithm {
         List<Cell> exploredCells = new ArrayList<>();
         List<Cell> path = new ArrayList<>();
 
-        Cell start = grid.getStart(grid);
+        Cell start = grid.getStart();
         Cell end = grid.getEnd();
 
         if (start == null || end == null) {
@@ -71,7 +71,7 @@ public class Dijkstra implements PathFinderAlgorithm {
                 break;
             }
 
-            for (Cell neighbour : grid.getNeighbors(current, grid)) {
+            for (Cell neighbour : grid.getNeighbors(current)) {
 
                 if (neighbour.getState() == CellState.WALL) {
                     continue;
