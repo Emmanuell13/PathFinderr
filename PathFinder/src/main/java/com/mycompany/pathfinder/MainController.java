@@ -21,6 +21,11 @@ import com.mycompany.pathfinder.algorithms.AStar;
 import com.mycompany.pathfinder.algorithms.PathFinderAlgorithm;
 import com.mycompany.pathfinder.algorithms.PathResult;
 
+import com.mycompany.pathfinder.config.reflect.ReflectUtility;
+import com.mycompany.pathfinder.models.AlgoRun;
+import com.mycompany.pathfinder.models.GridCell;
+import com.mycompany.pathfinder.models.PathCell;
+
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
@@ -147,7 +152,7 @@ public class MainController {
         gridPane.setHgap(0);
         gridPane.setVgap(0);
 
-        // Création des 25 colonnes
+        // Création des colonnes
         for (int column = 0;
                 column < Grid.COLUMNS;
                 column++) {
@@ -168,7 +173,7 @@ public class MainController {
             );
         }
 
-        // Création des 20 lignes
+        // Création des lignes
         for (int row = 0;
                 row < Grid.ROWS;
                 row++) {
@@ -356,14 +361,12 @@ public class MainController {
             return;
         }
 
-        // Arrêter une animation précédente
         if (animation != null) {
 
             animation.stop();
 
         }
 
-        // Effacer l'ancien résultat
         clearAlgorithmStates();
 
         switch (selected) {
@@ -431,10 +434,180 @@ public class MainController {
                 )
         );
 
-        // Lancer l'animation
+        // Enregistrement dans PostgreSQL
+        saveResultToDatabase(
+                selected,
+                result,
+                executionTime
+        );
+
+        // Animation
         animateResult(
                 result
         );
+    }
+
+    private void saveResultToDatabase(
+            AlgorithmType selected,
+            PathResult result,
+            double executionTime) {
+
+        try {
+
+            // Enregistrer la grille
+            com.mycompany.pathfinder.models.Grid databaseGrid =
+                    new com.mycompany.pathfinder.models.Grid(
+                            Grid.ROWS,
+                            Grid.COLUMNS
+                    );
+
+            int gridId =
+                    ReflectUtility.insertAndGetId(
+                            databaseGrid,
+                            "grid",
+                            "grid_id"
+                    );
+
+            System.out.println(
+                    "Grille enregistrée avec ID : "
+                    + gridId
+            );
+
+            // Enregistrer les murs, le départ et l'arrivée
+            for (int row = 0;
+                    row < Grid.ROWS;
+                    row++) {
+
+                for (int column = 0;
+                        column < Grid.COLUMNS;
+                        column++) {
+
+                    Cell cell =
+                            grid.getCell(
+                                    row,
+                                    column
+                            );
+
+                    com.mycompany.pathfinder.model.enums.CellType cellType =
+                            null;
+
+                    if (cell.getState()
+                            == CellState.WALL) {
+
+                        cellType =
+                                com.mycompany.pathfinder.model.enums.CellType.WALL;
+
+                    } else if (cell.getState()
+                            == CellState.START) {
+
+                        cellType =
+                                com.mycompany.pathfinder.model.enums.CellType.START;
+
+                    } else if (cell.getState()
+                            == CellState.END) {
+
+                        cellType =
+                                com.mycompany.pathfinder.model.enums.CellType.END;
+                    }
+
+                    if (cellType != null) {
+
+                        GridCell gridCell =
+                                new GridCell(
+                                        gridId,
+                                        row,
+                                        column,
+                                        cellType
+                                );
+
+                        ReflectUtility.insertAndGetId(
+                                gridCell,
+                                "grid_cell",
+                                "cell_id"
+                        );
+                    }
+                }
+            }
+
+            // Conversion AlgorithmType vers l'enum BDD
+            com.mycompany.pathfinder.model.enums.AlgorithmType databaseAlgorithm =
+                    com.mycompany.pathfinder.model.enums.AlgorithmType.valueOf(
+                            selected.name()
+                    );
+
+            // Enregistrer l'exécution
+            AlgoRun algoRun =
+                    new AlgoRun(
+                            gridId,
+                            databaseAlgorithm,
+                            executionTime,
+                            result.getExploredCells().size(),
+                            result.getPath().size()
+                    );
+
+            int runId =
+                    ReflectUtility.insertAndGetId(
+                            algoRun,
+                            "algo_run",
+                            "run_id"
+                    );
+
+            System.out.println(
+                    "Exécution enregistrée avec ID : "
+                    + runId
+            );
+
+            // Enregistrer les cases explorées
+            for (Cell cell :
+                    result.getExploredCells()) {
+
+                PathCell pathCell =
+                        new PathCell(
+                                runId,
+                                cell.getRow(),
+                                cell.getColumn(),
+                                com.mycompany.pathfinder.model.enums.CellState.EXPLORED
+                        );
+
+                ReflectUtility.insertAndGetId(
+                        pathCell,
+                        "path_cell",
+                        "path_cell_id"
+                );
+            }
+
+            // Enregistrer le chemin final
+            for (Cell cell :
+                    result.getPath()) {
+
+                PathCell pathCell =
+                        new PathCell(
+                                runId,
+                                cell.getRow(),
+                                cell.getColumn(),
+                                com.mycompany.pathfinder.model.enums.CellState.PATH
+                        );
+
+                ReflectUtility.insertAndGetId(
+                        pathCell,
+                        "path_cell",
+                        "path_cell_id"
+                );
+            }
+
+            System.out.println(
+                    "Résultats enregistrés dans PostgreSQL !"
+            );
+
+        } catch (Exception e) {
+
+            System.err.println(
+                    "Erreur lors de l'enregistrement en base : "
+                    + e.getMessage()
+            );
+
+            e.printStackTrace();
+        }
     }
 
     private void animateResult(
@@ -483,7 +656,6 @@ public class MainController {
             }
         }
 
-        // Petite pause avant l'affichage du chemin
         step += 8;
 
         // Affichage progressif du chemin
