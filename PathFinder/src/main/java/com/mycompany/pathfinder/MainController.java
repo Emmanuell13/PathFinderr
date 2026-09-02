@@ -21,10 +21,12 @@ import com.mycompany.pathfinder.algorithms.AStar;
 import com.mycompany.pathfinder.algorithms.PathFinderAlgorithm;
 import com.mycompany.pathfinder.algorithms.PathResult;
 
-import com.mycompany.pathfinder.config.reflect.ReflectUtility;
-import com.mycompany.pathfinder.models.AlgoRun;
-import com.mycompany.pathfinder.models.GridCell;
-import com.mycompany.pathfinder.models.PathCell;
+import com.mycompany.pathfinder.config.DatabaseConnection;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -447,153 +449,243 @@ public class MainController {
         );
     }
 
-    private void saveResultToDatabase(
-            AlgorithmType selected,
-            PathResult result,
-            double executionTime) {
+private void saveResultToDatabase(
+        AlgorithmType selected,
+        PathResult result,
+        double executionTime) {
+
+    String insertGrid =
+            "INSERT INTO grid (rows_grid, cols_grid) "
+            + "VALUES (?, ?) RETURNING grid_id";
+
+    String insertGridCell =
+            "INSERT INTO grid_cell "
+            + "(grid_id, row_index, col_index, cell_type) "
+            + "VALUES (?, ?, ?, ?)";
+
+    String insertAlgoRun =
+            "INSERT INTO algo_run "
+            + "(grid_id, algorithm, execution_time, cells_explored, path_length) "
+            + "VALUES (?, ?, ?, ?, ?) RETURNING run_id";
+
+    String insertPathCell =
+            "INSERT INTO path_cell "
+            + "(run_id, row_index, col_index, cell_state) "
+            + "VALUES (?, ?, ?, ?)";
+
+    try (Connection connection =
+            DatabaseConnection.getConnection()) {
+
+        // Une seule transaction pour tout enregistrer
+        connection.setAutoCommit(false);
 
         try {
 
-            // Enregistrer la grille
-            com.mycompany.pathfinder.models.Grid databaseGrid =
-                    new com.mycompany.pathfinder.models.Grid(
-                            Grid.ROWS,
-                            Grid.COLUMNS
-                    );
+            // 1. ENREGISTRER LA GRILLE
 
-            int gridId =
-                    ReflectUtility.insertAndGetId(
-                            databaseGrid,
-                            "grid",
-                            "grid_id"
-                    );
+            int gridId;
 
-            System.out.println(
-                    "Grille enregistrée avec ID : "
-                    + gridId
-            );
+            try (PreparedStatement statement = connection.prepareStatement(insertGrid)) {
 
-            // Enregistrer les murs, le départ et l'arrivée
-            for (int row = 0;
-                    row < Grid.ROWS;
-                    row++) {
+                statement.setInt(1,Grid.ROWS);
+                statement.setInt(2,Grid.COLUMNS);
 
-                for (int column = 0;
-                        column < Grid.COLUMNS;
-                        column++) {
+                try (ResultSet resultSet = statement.executeQuery()) {
 
-                    Cell cell =
-                            grid.getCell(
-                                    row,
-                                    column
-                            );
+                    if (!resultSet.next()) {
 
-                    com.mycompany.pathfinder.model.enums.CellType cellType =
-                            null;
-
-                    if (cell.getState()
-                            == CellState.WALL) {
-
-                        cellType =
-                                com.mycompany.pathfinder.model.enums.CellType.WALL;
-
-                    } else if (cell.getState()
-                            == CellState.START) {
-
-                        cellType =
-                                com.mycompany.pathfinder.model.enums.CellType.START;
-
-                    } else if (cell.getState()
-                            == CellState.END) {
-
-                        cellType =
-                                com.mycompany.pathfinder.model.enums.CellType.END;
+                        throw new SQLException("Impossible de récupérer grid_id.");
                     }
 
-                    if (cellType != null) {
-
-                        GridCell gridCell =
-                                new GridCell(
-                                        gridId,
-                                        row,
-                                        column,
-                                        cellType
-                                );
-
-                        ReflectUtility.insertAndGetId(
-                                gridCell,
-                                "grid_cell",
-                                "cell_id"
-                        );
-                    }
+                    gridId = resultSet.getInt("grid_id");
                 }
             }
 
-            // Conversion AlgorithmType vers l'enum BDD
-            com.mycompany.pathfinder.model.enums.AlgorithmType databaseAlgorithm =
-                    com.mycompany.pathfinder.model.enums.AlgorithmType.valueOf(
-                            selected.name()
-                    );
+            System.out.println("Grille enregistrée avec ID : " + gridId);
 
-            // Enregistrer l'exécution
-            AlgoRun algoRun =
-                    new AlgoRun(
-                            gridId,
-                            databaseAlgorithm,
-                            executionTime,
-                            result.getExploredCells().size(),
-                            result.getPath().size()
-                    );
 
-            int runId =
-                    ReflectUtility.insertAndGetId(
-                            algoRun,
-                            "algo_run",
-                            "run_id"
-                    );
+            // 2. ENREGISTRER WALL / START / END
+
+            try (PreparedStatement statement = connection.prepareStatement(insertGridCell)) {
+
+                for (int row = 0;row < Grid.ROWS;row++) {
+
+                    for (int column = 0;column < Grid.COLUMNS;column++) {
+
+                        Cell cell =
+                                grid.getCell(
+                                        row,
+                                        column
+                                );
+
+                        String cellType = null;
+
+                        if (cell.getState()
+                                == CellState.WALL) {
+
+                            cellType = "WALL";
+
+                        } else if (cell.getState()
+                                == CellState.START) {
+
+                            cellType = "START";
+
+                        } else if (cell.getState()
+                                == CellState.END) {
+
+                            cellType = "END";
+                        }
+
+                        if (cellType != null) {
+
+                            statement.setInt(1,gridId);
+
+                            statement.setInt(2,row);
+
+                            statement.setInt(3,column);
+
+                            statement.setObject(4,cellType,Types.OTHER);
+
+                            // Ajout au lot
+                            statement.addBatch();
+                        }
+                    }
+                }
+
+                // Un seul envoi groupé
+                statement.executeBatch();
+            }
+
+
+            // ENREGISTRER L'EXÉCUTION
+
+            int runId;
+
+            try (PreparedStatement statement =
+                    connection.prepareStatement(
+                            insertAlgoRun
+                    )) {
+
+                statement.setInt(
+                        1,
+                        gridId
+                );
+
+                statement.setObject(
+                        2,
+                        selected.name(),
+                        Types.OTHER
+                );
+
+                statement.setDouble(
+                        3,
+                        executionTime
+                );
+
+                statement.setInt(
+                        4,
+                        result.getExploredCells().size()
+                );
+
+                statement.setInt(
+                        5,
+                        result.getPath().size()
+                );
+
+                try (ResultSet resultSet =
+                        statement.executeQuery()) {
+
+                    if (!resultSet.next()) {
+
+                        throw new SQLException(
+                                "Impossible de récupérer run_id."
+                        );
+                    }
+
+                    runId =
+                            resultSet.getInt(
+                                    "run_id"
+                            );
+                }
+            }
 
             System.out.println(
                     "Exécution enregistrée avec ID : "
                     + runId
             );
 
-            // Enregistrer les cases explorées
-            for (Cell cell :
-                    result.getExploredCells()) {
 
-                PathCell pathCell =
-                        new PathCell(
-                                runId,
-                                cell.getRow(),
-                                cell.getColumn(),
-                                com.mycompany.pathfinder.model.enums.CellState.EXPLORED
-                        );
+            // ENREGISTRER EXPLORED ET PATH
 
-                ReflectUtility.insertAndGetId(
-                        pathCell,
-                        "path_cell",
-                        "path_cell_id"
-                );
+            try (PreparedStatement statement =
+                    connection.prepareStatement(
+                            insertPathCell
+                    )) {
+
+                // Cases explorées
+                for (Cell cell :
+                        result.getExploredCells()) {
+
+                    statement.setInt(
+                            1,
+                            runId
+                    );
+
+                    statement.setInt(
+                            2,
+                            cell.getRow()
+                    );
+
+                    statement.setInt(
+                            3,
+                            cell.getColumn()
+                    );
+
+                    statement.setObject(
+                            4,
+                            "EXPLORED",
+                            Types.OTHER
+                    );
+
+                    statement.addBatch();
+                }
+
+                // Chemin final
+                for (Cell cell :
+                        result.getPath()) {
+
+                    statement.setInt(
+                            1,
+                            runId
+                    );
+
+                    statement.setInt(
+                            2,
+                            cell.getRow()
+                    );
+
+                    statement.setInt(
+                            3,
+                            cell.getColumn()
+                    );
+
+                    statement.setObject(
+                            4,
+                            "PATH",
+                            Types.OTHER
+                    );
+
+                    statement.addBatch();
+                }
+
+                // Toutes les cases sont envoyées ensemble
+                statement.executeBatch();
             }
 
-            // Enregistrer le chemin final
-            for (Cell cell :
-                    result.getPath()) {
 
-                PathCell pathCell =
-                        new PathCell(
-                                runId,
-                                cell.getRow(),
-                                cell.getColumn(),
-                                com.mycompany.pathfinder.model.enums.CellState.PATH
-                        );
+            // VALIDER LA TRANSACTION
 
-                ReflectUtility.insertAndGetId(
-                        pathCell,
-                        "path_cell",
-                        "path_cell_id"
-                );
-            }
+            connection.commit();
 
             System.out.println(
                     "Résultats enregistrés dans PostgreSQL !"
@@ -601,14 +693,23 @@ public class MainController {
 
         } catch (Exception e) {
 
-            System.err.println(
-                    "Erreur lors de l'enregistrement en base : "
-                    + e.getMessage()
-            );
+            // Si quelque chose échoue,
+            // annuler tous les INSERT
+            connection.rollback();
 
-            e.printStackTrace();
+            throw e;
         }
+
+    } catch (Exception e) {
+
+        System.err.println(
+                "Erreur lors de l'enregistrement en base : "
+                + e.getMessage()
+        );
+
+        e.printStackTrace();
     }
+}
 
     private void animateResult(
             PathResult result) {
