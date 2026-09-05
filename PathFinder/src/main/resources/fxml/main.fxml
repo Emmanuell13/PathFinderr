@@ -11,163 +11,321 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
+<AnchorPane id="AnchorPane"
+            fx:controller="com.mycompany.pathfinder.MainController"
+            prefHeight="700.0"
+            prefWidth="1200.0"
+            xmlns:fx="http://javafx.com/fxml/1"
+            xmlns="http://javafx.com/javafx/26">
 
-<AnchorPane id="AnchorPane" fx:controller="com.mycompany.pathfinder.MainController" prefHeight="700.0" prefWidth="1200.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/26"> 
-   <children> 
-      <HBox layoutX="40.0" layoutY="30.0" prefHeight="620.0" prefWidth="1120.0" spacing="30.0"> 
-         <children> 
+    <children>
 
-            <VBox prefHeight="620.0" prefWidth="700.0" spacing="20.0"> 
-               <children> 
+        <HBox layoutX="40.0"
+              layoutY="30.0"
+              prefHeight="620.0"
+              prefWidth="1120.0"
+              spacing="30.0">
 
-                  <Label text="Visualisation des algorithmes"> 
-                     <font> 
-                        <Font name="System Bold" size="24.0" /> 
-                     </font> 
-                  </Label> 
+            <children>
 
-                  <GridPane fx:id="gridPane" prefHeight="480.0" prefWidth="650.0" style="-fx-border-color: #cccccc; -fx-border-width: 1;" /> 
+                <!-- ========================= -->
+                <!-- GRILLE                     -->
+                <!-- ========================= -->
 
-                  <HBox spacing="25.0"> 
-                     <children> 
+                <VBox prefHeight="620.0"
+                      prefWidth="700.0"
+                      spacing="20.0">
 
-                        <Label text="S  Départ" textFill="GREEN"> 
-                           <font> 
-                              <Font name="System Bold" size="13.0" /> 
-                           </font> 
-                        </Label> 
+                    <children>
 
-                        <Label text="A  Arrivée" textFill="RED"> 
-                           <font> 
-                              <Font name="System Bold" size="13.0" /> 
-                           </font> 
-                        </Label> 
+                        <Label text="Visualisation des algorithmes">
+                            <font>
+                                <Font name="System Bold" size="24.0"/>
+                            </font>
+                        </Label>
 
-                        <Label text="■  Mur" textFill="DARKGRAY" /> 
+                        <GridPane fx:id="gridPane"
+                                  prefHeight="480.0"
+                                  prefWidth="650.0"
+                                  style="-fx-border-color: #cccccc; -fx-border-width: 1;"/>
 
-                        <Label text="■  Exploré" textFill="LIGHTBLUE" /> 
+                        <!-- ========================= -->
+                        <!-- LEGENDE                     -->
+                        <!-- ========================= -->
 
-                        <Label text="■  Chemin" textFill="GOLD" /> 
+                        <HBox spacing="18.0">
 
-                     </children> 
-                  </HBox> 
+                            <children>
 
-               </children> 
-            </VBox> 
+                                <Label text="S  Départ"
+                                       textFill="GREEN">
+                                    <font>
+                                        <Font name="System Bold" size="13.0"/>
+                                    </font>
+                                </Label>
+
+                                <Label text="A  Arrivée"
+                                       textFill="RED">
+                                    <font>
+                                        <Font name="System Bold" size="13.0"/>
+                                    </font>
+                                </Label>
+
+                                <Label text="■  Mur"
+                                       textFill="DARKGRAY"/>
+
+                                <Label text="■  BFS"
+                                       textFill="BLUE">
+                                    <font>
+                                        <Font name="System Bold" size="12.0"/>
+                                    </font>
+                                </Label>
+
+                                <Label text="■  DFS"
+                                       textFill="GREEN">
+                                    <font>
+                                        <Font name="System Bold" size="12.0"/>
+                                    </font>
+                                </Label>
+
+                                <Label text="■  Dijkstra"
+                                       textFill="PURPLE">
+                                    <font>
+                                        <Font name="System Bold" size="12.0"/>
+                                    </font>
+                                </Label>
+
+                                <Label text="■  A*"
+                                       textFill="ORANGE">
+                                    <font>
+                                        <Font name="System Bold" size="12.0"/>
+                                    </font>
+                                </Label>
+
+                            </children>
+
+                        </HBox>
+
+                    </children>
+
+                </VBox>
 
 
-            <VBox prefHeight="620.0" prefWidth="390.0" spacing="15.0"> 
+                <!-- ========================= -->
+                <!-- CONTROLES                   -->
+                <!-- ========================= -->
 
-               <padding> 
-                  <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" /> 
-               </padding> 
+                <VBox prefHeight="620.0"
+                      prefWidth="390.0"
+                      spacing="15.0">
 
-               <children> 
+                    <padding>
+                        <Insets bottom="10.0"
+                                left="10.0"
+                                right="10.0"
+                                top="5.0"/>
+                    </padding>
 
-                  <Label text="Contrôles"> 
-                     <font> 
-                        <Font name="System Bold" size="24.0" /> 
-                     </font> 
-                  </Label> 
+                    <children>
 
-                  <Label text="Algorithme"> 
-                     <font> 
-                        <Font size="15.0" /> 
-                     </font> 
-                  </Label> 
+                        <Label text="Contrôles">
+                            <font>
+                                <Font name="System Bold" size="24.0"/>
+                            </font>
+                        </Label>
 
-                  <ComboBox fx:id="algorithmComboBox" prefHeight="40.0" prefWidth="350.0" /> 
 
-                  <HBox spacing="15.0"> 
-                     <children> 
+                        <!-- ALGORITHME -->
 
-                        <Button fx:id="startButton" mnemonicParsing="false" prefHeight="40.0" prefWidth="160.0" text="Placer départ"> 
-                           <font> 
-                              <Font size="14.0" /> 
-                           </font> 
-                        </Button> 
+                        <Label text="Algorithme">
+                            <font>
+                                <Font size="15.0"/>
+                            </font>
+                        </Label>
 
-                        <Button fx:id="endButton" mnemonicParsing="false" prefHeight="40.0" prefWidth="160.0" text="Placer arrivée"> 
-                           <font> 
-                              <Font size="14.0" /> 
-                           </font> 
-                        </Button> 
+                        <ComboBox fx:id="algorithmComboBox"
+                                  prefHeight="40.0"
+                                  prefWidth="350.0"/>
 
-                     </children> 
-                  </HBox> 
 
-                  <HBox spacing="15.0"> 
-                     <children> 
+                        <!-- DEPART / ARRIVEE -->
 
-                        <Button fx:id="launchButton" mnemonicParsing="false" prefHeight="45.0" prefWidth="160.0" text="Lancer"> 
-                           <font> 
-                              <Font size="15.0" /> 
-                           </font> 
-                        </Button> 
+                        <HBox spacing="15.0">
 
-                        <Button fx:id="resetButton" mnemonicParsing="false" prefHeight="45.0" prefWidth="160.0" text="Réinitialiser"> 
-                           <font> 
-                              <Font size="15.0" /> 
-                           </font> 
-                        </Button> 
+                            <children>
 
-                     </children> 
-                  </HBox> 
+                                <Button fx:id="startButton"
+                                        mnemonicParsing="false"
+                                        prefHeight="40.0"
+                                        prefWidth="160.0"
+                                        text="Placer départ">
 
-                  <Separator prefWidth="350.0" /> 
+                                    <font>
+                                        <Font size="14.0"/>
+                                    </font>
 
-                  <Label text="Résultats"> 
-                     <font> 
-                        <Font name="System Bold" size="21.0" /> 
-                     </font> 
-                  </Label> 
+                                </Button>
 
-                  <HBox spacing="20.0"> 
-                     <children> 
 
-                        <Label prefWidth="220.0" text="Cases explorées :" /> 
+                                <Button fx:id="endButton"
+                                        mnemonicParsing="false"
+                                        prefHeight="40.0"
+                                        prefWidth="160.0"
+                                        text="Placer arrivée">
 
-                        <Label fx:id="exploredLabel" text="0"> 
-                           <font> 
-                              <Font name="System Bold" size="12.0" /> 
-                           </font> 
-                        </Label> 
+                                    <font>
+                                        <Font size="14.0"/>
+                                    </font>
 
-                     </children> 
-                  </HBox> 
+                                </Button>
 
-                  <HBox spacing="20.0"> 
-                     <children> 
+                            </children>
 
-                        <Label prefWidth="220.0" text="Longueur du chemin :" /> 
+                        </HBox>
 
-                        <Label fx:id="pathLengthLabel" text="0"> 
-                           <font> 
-                              <Font name="System Bold" size="12.0" /> 
-                           </font> 
-                        </Label> 
 
-                     </children> 
-                  </HBox> 
+                        <!-- LANCER / RESET -->
 
-                  <HBox spacing="20.0"> 
-                     <children> 
+                        <HBox spacing="15.0">
 
-                        <Label prefWidth="220.0" text="Temps d'exécution :" /> 
+                            <children>
 
-                        <Label fx:id="timeLabel" text="0 ms"> 
-                           <font> 
-                              <Font name="System Bold" size="12.0" /> 
-                           </font> 
-                        </Label> 
+                                <Button fx:id="launchButton"
+                                        mnemonicParsing="false"
+                                        prefHeight="45.0"
+                                        prefWidth="160.0"
+                                        text="Lancer">
 
-                     </children> 
-                  </HBox> 
+                                    <font>
+                                        <Font size="15.0"/>
+                                    </font>
 
-               </children> 
-            </VBox> 
+                                </Button>
 
-         </children> 
-      </HBox> 
-   </children> 
+
+                                <Button fx:id="resetButton"
+                                        mnemonicParsing="false"
+                                        prefHeight="45.0"
+                                        prefWidth="160.0"
+                                        text="Réinitialiser">
+
+                                    <font>
+                                        <Font size="15.0"/>
+                                    </font>
+
+                                </Button>
+
+                            </children>
+
+                        </HBox>
+
+
+                        <!-- ========================= -->
+                        <!-- NOUVEAU BOUTON             -->
+                        <!-- ========================= -->
+
+                        <Button fx:id="compareButton"
+                                mnemonicParsing="false"
+                                prefHeight="45.0"
+                                prefWidth="335.0"
+                                text="Lancer les 4 algorithmes">
+
+                            <font>
+                                <Font name="System Bold"
+                                      size="14.0"/>
+                            </font>
+
+                        </Button>
+
+
+                        <Separator prefWidth="350.0"/>
+
+
+                        <!-- ========================= -->
+                        <!-- RESULTATS                   -->
+                        <!-- ========================= -->
+
+                        <Label text="Résultats">
+                            <font>
+                                <Font name="System Bold"
+                                      size="21.0"/>
+                            </font>
+                        </Label>
+
+
+                        <HBox spacing="20.0">
+
+                            <children>
+
+                                <Label prefWidth="220.0"
+                                       text="Cases explorées :"/>
+
+                                <Label fx:id="exploredLabel"
+                                       text="0">
+
+                                    <font>
+                                        <Font name="System Bold"
+                                              size="12.0"/>
+                                    </font>
+
+                                </Label>
+
+                            </children>
+
+                        </HBox>
+
+
+                        <HBox spacing="20.0">
+
+                            <children>
+
+                                <Label prefWidth="220.0"
+                                       text="Longueur du chemin :"/>
+
+                                <Label fx:id="pathLengthLabel"
+                                       text="0">
+
+                                    <font>
+                                        <Font name="System Bold"
+                                              size="12.0"/>
+                                    </font>
+
+                                </Label>
+
+                            </children>
+
+                        </HBox>
+
+
+                        <HBox spacing="20.0">
+
+                            <children>
+
+                                <Label prefWidth="220.0"
+                                       text="Temps d'exécution :"/>
+
+                                <Label fx:id="timeLabel"
+                                       text="0 ms">
+
+                                    <font>
+                                        <Font name="System Bold"
+                                              size="12.0"/>
+                                    </font>
+
+                                </Label>
+
+                            </children>
+
+                        </HBox>
+
+                    </children>
+
+                </VBox>
+
+            </children>
+
+        </HBox>
+
+    </children>
+
 </AnchorPane>
