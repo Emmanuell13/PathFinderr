@@ -1709,9 +1709,11 @@ public class MainController {
                                             CellState.EXPLORED
                                     );
 
-                                    colorPathCell(
-                                            currentCell, algorithm
+
+                                    updateVisualCell(
+                                            currentCell
                                     );
+                                    
                                 }
                         );
 
@@ -1760,8 +1762,8 @@ public class MainController {
                                     );
 
 
-                                    updateVisualCell(
-                                            currentCell
+                                    colorPathCell(
+                                            currentCell, algorithm
                                     );
                                 }
                         );
