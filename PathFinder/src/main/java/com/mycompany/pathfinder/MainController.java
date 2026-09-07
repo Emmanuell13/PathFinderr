@@ -654,7 +654,7 @@ public class MainController {
 
 
         animateResult(
-                result
+                result, selected
         );
     }
 
@@ -1670,7 +1670,7 @@ public class MainController {
     // =========================================================
 
     private void animateResult(
-            PathResult result) {
+            PathResult result, AlgorithmType algorithm) {
 
         animation =
                 new Timeline();
@@ -1709,9 +1709,8 @@ public class MainController {
                                             CellState.EXPLORED
                                     );
 
-
-                                    updateVisualCell(
-                                            currentCell
+                                    colorPathCell(
+                                            currentCell, algorithm
                                     );
                                 }
                         );
