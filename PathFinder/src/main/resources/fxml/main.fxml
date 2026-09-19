@@ -10,6 +10,8 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
 
 <AnchorPane id="AnchorPane"
             fx:controller="com.mycompany.pathfinder.MainController"
@@ -150,38 +152,17 @@
 
                         <!-- DEPART / ARRIVEE -->
 
-                        <HBox spacing="15.0">
+                        <Button fx:id="positionButton"
+                                mnemonicParsing="false"
+                                prefHeight="40.0"
+                                prefWidth="335.0"
+                                text="Placer départ / arrivée">
 
-                            <children>
+                            <font>
+                                <Font size="14.0"/>
+                            </font>
 
-                                <Button fx:id="startButton"
-                                        mnemonicParsing="false"
-                                        prefHeight="40.0"
-                                        prefWidth="160.0"
-                                        text="Placer départ">
-
-                                    <font>
-                                        <Font size="14.0"/>
-                                    </font>
-
-                                </Button>
-
-
-                                <Button fx:id="endButton"
-                                        mnemonicParsing="false"
-                                        prefHeight="40.0"
-                                        prefWidth="160.0"
-                                        text="Placer arrivée">
-
-                                    <font>
-                                        <Font size="14.0"/>
-                                    </font>
-
-                                </Button>
-
-                            </children>
-
-                        </HBox>
+                        </Button>
 
 
                         <!-- LANCER / RESET -->
@@ -253,70 +234,34 @@
                         </Label>
 
 
-                        <HBox spacing="20.0">
+                        <TableView fx:id="resultTable"
+                                    prefWidth="370.0"
+                                    minWidth="370.0"
+                                    maxWidth="370.0"
+                                    prefHeight="145.0"
+                                    minHeight="145.0"
+                                    maxHeight="145.0">
 
-                            <children>
+                             <columns>
 
-                                <Label prefWidth="220.0"
-                                       text="Cases explorées :"/>
+                                 <TableColumn fx:id="rankColumn"
+                                              text="Rang"/>
 
-                                <Label fx:id="exploredLabel"
-                                       text="0">
+                                 <TableColumn fx:id="algorithmColumn"
+                                              text="Algorithme"/>
 
-                                    <font>
-                                        <Font name="System Bold"
-                                              size="12.0"/>
-                                    </font>
+                                 <TableColumn fx:id="exploredColumn"
+                                              text="Explorées"/>
 
-                                </Label>
+                                 <TableColumn fx:id="pathColumn"
+                                              text="Chemin"/>
 
-                            </children>
+                                 <TableColumn fx:id="timeColumn"
+                                              text="Temps exécution"/>
 
-                        </HBox>
+                             </columns>
 
-
-                        <HBox spacing="20.0">
-
-                            <children>
-
-                                <Label prefWidth="220.0"
-                                       text="Longueur du chemin :"/>
-
-                                <Label fx:id="pathLengthLabel"
-                                       text="0">
-
-                                    <font>
-                                        <Font name="System Bold"
-                                              size="12.0"/>
-                                    </font>
-
-                                </Label>
-
-                            </children>
-
-                        </HBox>
-
-
-                        <HBox spacing="20.0">
-
-                            <children>
-
-                                <Label prefWidth="220.0"
-                                       text="Temps d'exécution :"/>
-
-                                <Label fx:id="timeLabel"
-                                       text="0 ms">
-
-                                    <font>
-                                        <Font name="System Bold"
-                                              size="12.0"/>
-                                    </font>
-
-                                </Label>
-
-                            </children>
-
-                        </HBox>
+                         </TableView>
 
                     </children>
 

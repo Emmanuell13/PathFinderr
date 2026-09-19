@@ -48,7 +48,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
 
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -57,6 +56,12 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.RowConstraints;
 
 import javafx.util.Duration;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 
 
 public class MainController {
@@ -69,10 +74,7 @@ public class MainController {
     private GridPane gridPane;
 
     @FXML
-    private Button startButton;
-
-    @FXML
-    private Button endButton;
+    private Button positionButton;
 
     @FXML
     private Button launchButton;
@@ -84,16 +86,27 @@ public class MainController {
     private Button compareButton;
 
     @FXML
-    private Label exploredLabel;
+    private TableView<ResultRow> resultTable;
 
     @FXML
-    private Label pathLengthLabel;
+    private TableColumn<ResultRow, String> algorithmColumn;
 
     @FXML
-    private Label timeLabel;
+    private TableColumn<ResultRow, Integer> exploredColumn;
+
+    @FXML
+    private TableColumn<ResultRow, Integer> pathColumn;
+
+    @FXML
+    private TableColumn<ResultRow, String> timeColumn;
+
+    private ObservableList<ResultRow> resultRows;
 
     @FXML
     private ComboBox<AlgorithmType> algorithmComboBox;
+    
+    @FXML
+private TableColumn<ResultRow, String> rankColumn;
 
 
     // =========================================================
@@ -102,8 +115,7 @@ public class MainController {
 
     private Grid grid;
 
-    private boolean placingStart = false;
-    private boolean placingEnd = false;
+    private int placementStep = 0;
 
     private Cell startCell = null;
     private Cell endCell = null;
@@ -154,6 +166,69 @@ public class MainController {
     private static final String ASTAR_COLOR =
             "#FF9800";
 
+    public static class ResultRow {
+
+        private String algorithm;
+        private Integer explored;
+        private Integer pathLength;
+        private String executionTime;
+        private String rank;
+
+        public ResultRow(
+                String algorithm,
+                Integer explored,
+                Integer pathLength,
+                String executionTime) {
+
+            this.algorithm = algorithm;
+            this.explored = explored;
+            this.pathLength = pathLength;
+            this.executionTime = executionTime;
+            this.rank = "—";
+        }
+
+        public String getRank() {
+            return rank;
+        }
+
+        public void setRank(String rank) {
+            this.rank = rank;
+        }
+
+        public String getAlgorithm() {
+            return algorithm;
+        }
+
+
+        public Integer getExplored() {
+            return explored;
+        }
+
+
+        public Integer getPathLength() {
+            return pathLength;
+        }
+
+
+        public String getExecutionTime() {
+            return executionTime;
+        }
+
+
+        public void setExplored(Integer explored) {
+            this.explored = explored;
+        }
+
+
+        public void setPathLength(Integer pathLength) {
+            this.pathLength = pathLength;
+        }
+
+
+        public void setExecutionTime(String executionTime) {
+            this.executionTime = executionTime;
+        }
+    }
 
     // =========================================================
     // RESULTAT ALGORITHME
@@ -249,33 +324,70 @@ public class MainController {
                 AlgorithmType.DIJKSTRA
         );
 
+        // =====================================================
+        // TABLEAU DES RESULTATS
+        // =====================================================
+
+
+        // Les colonnes occupent toute la largeur disponible
+        resultTable.setColumnResizePolicy(
+                TableView.CONSTRAINED_RESIZE_POLICY
+        );
+        
+        rankColumn.setCellValueFactory(
+        new PropertyValueFactory<>("rank")
+        );
+        
+        // Répartition de la largeur des colonnes
+        rankColumn.setMaxWidth(0.55f * Integer.MAX_VALUE);
+        algorithmColumn.setMaxWidth(1.05f * Integer.MAX_VALUE);
+        exploredColumn.setMaxWidth(0.95f * Integer.MAX_VALUE);
+        pathColumn.setMaxWidth(0.75f * Integer.MAX_VALUE);
+        timeColumn.setMaxWidth(1.70f * Integer.MAX_VALUE);
+        
+        algorithmColumn.setCellValueFactory(
+                new PropertyValueFactory<>("algorithm")
+        );
+
+        exploredColumn.setCellValueFactory(
+                new PropertyValueFactory<>("explored")
+        );
+
+        pathColumn.setCellValueFactory(
+                new PropertyValueFactory<>("pathLength")
+        );
+
+        timeColumn.setCellValueFactory(
+                new PropertyValueFactory<>("executionTime")
+        );
+
+
+        resultRows = FXCollections.observableArrayList(
+
+                new ResultRow("BFS", null, null, "—"),
+
+                new ResultRow("DFS", null, null, "—"),
+
+                new ResultRow("Dijkstra", null, null, "—"),
+
+                new ResultRow("A*", null, null, "—")
+        );
+
+
+        resultTable.setItems(
+                resultRows
+        );
 
         // =====================================================
-        // BOUTON DEPART
+        // BOUTON DEPART / ARRIVEE
         // =====================================================
 
-        startButton.setOnAction(event -> {
+        positionButton.setOnAction(event -> {
 
-            placingStart = true;
-            placingEnd = false;
+            placementStep = 0;
 
             System.out.println(
-                    "Choisissez une case pour le départ."
-            );
-        });
-
-
-        // =====================================================
-        // BOUTON ARRIVEE
-        // =====================================================
-
-        endButton.setOnAction(event -> {
-
-            placingEnd = true;
-            placingStart = false;
-
-            System.out.println(
-                    "Choisissez une case pour l'arrivée."
+                    "Cliquez sur une case pour placer le départ."
             );
         });
 
@@ -468,21 +580,19 @@ public class MainController {
     // CLIC SUR UNE CASE
     // =========================================================
 
-    private void handleCellClick(Cell cell) {
+private void handleCellClick(Cell cell) {
 
         // =====================================================
-        // DEPART
+        // 0 = PLACER LE DEPART
         // =====================================================
 
-        if (placingStart) {
+        if (placementStep == 0) {
 
-            if (cell.isWall()
-                    || cell.isEnd()) {
-
+            if (cell.isWall()) {
                 return;
             }
 
-
+            // Supprimer ancien départ
             if (startCell != null) {
 
                 startCell.setState(
@@ -490,45 +600,7 @@ public class MainController {
                 );
             }
 
-
-            cell.setState(
-                    CellState.START
-            );
-
-
-            startCell = cell;
-
-            placingStart = false;
-
-
-            refreshGrid();
-
-
-            System.out.println(
-                    "Départ : ligne "
-                    + cell.getRow()
-                    + ", colonne "
-                    + cell.getColumn()
-            );
-
-
-            return;
-        }
-
-
-        // =====================================================
-        // ARRIVEE
-        // =====================================================
-
-        if (placingEnd) {
-
-            if (cell.isWall()
-                    || cell.isStart()) {
-
-                return;
-            }
-
-
+            // Supprimer ancienne arrivée
             if (endCell != null) {
 
                 endCell.setState(
@@ -536,57 +608,149 @@ public class MainController {
                 );
             }
 
+            endCell = null;
+
+            // Placer nouveau départ
+            cell.setState(
+                    CellState.START
+            );
+
+            startCell = cell;
+
+            placementStep = 1;
+
+            refreshGrid();
+
+            System.out.println(
+                    "Départ placé. Cliquez maintenant sur une case pour l'arrivée."
+            );
+
+            return;
+        }
+
+
+        // =====================================================
+        // 1 = PLACER L'ARRIVEE
+        // =====================================================
+
+        if (placementStep == 1) {
+
+            if (cell.isWall()
+                    || cell.isStart()) {
+
+                return;
+            }
 
             cell.setState(
                     CellState.END
             );
 
-
             endCell = cell;
 
-            placingEnd = false;
-
+            placementStep = 2;
 
             refreshGrid();
 
+            System.out.println(
+                    "Arrivée placée."
+            );
+
+            return;
+        }
+
+
+        // =====================================================
+        // 2 = TROISIEME CLIC : RECOMMENCER
+        // =====================================================
+
+        if (placementStep == 2) {
+
+            if (cell.isWall()) {
+                return;
+            }
+
+            // Effacer ancien départ
+            if (startCell != null) {
+
+                startCell.setState(
+                        CellState.EMPTY
+                );
+            }
+
+            // Effacer ancienne arrivée
+            if (endCell != null) {
+
+                endCell.setState(
+                        CellState.EMPTY
+                );
+            }
+
+            // La case du troisième clic devient
+            // directement le nouveau départ
+            cell.setState(
+                    CellState.START
+            );
+
+            startCell = cell;
+            endCell = null;
+
+            placementStep = 1;
+
+            refreshGrid();
 
             System.out.println(
-                    "Arrivée : ligne "
-                    + cell.getRow()
-                    + ", colonne "
-                    + cell.getColumn()
+                    "Nouveau départ placé. Cliquez maintenant pour placer l'arrivée."
             );
         }
     }
 
 
-    // =========================================================
-    // LANCER UN SEUL ALGORITHME
-    // =========================================================
+        // =========================================================
+        // LANCER UN SEUL ALGORITHME
+        // =========================================================
 
-    @FXML
-    private void runAlgorithm() {
+        @FXML
+        private void runAlgorithm() {
 
-        AlgorithmType selected =
-                algorithmComboBox.getValue();
-
-
-        if (selected == null) {
-
-            return;
-        }
+            AlgorithmType selected =
+                    algorithmComboBox.getValue();
 
 
-        if (grid.getStart() == null
-                || grid.getEnd() == null) {
+            if (selected == null) {
 
-            System.out.println(
-                    "Veuillez placer un départ et une arrivée."
-            );
+                return;
+            }
 
-            return;
-        }
 
+            if (grid.getStart() == null && grid.getEnd() == null) {
+
+                showError(
+                        "Départ et arrivée manquants",
+                        "Veuillez placer le départ et l'arrivée avant de lancer l'algorithme."
+                );
+
+                return;
+            }
+
+            if (grid.getStart() == null) {
+
+                showError(
+                        "Départ manquant",
+                        "Veuillez placer le départ avant de lancer l'algorithme."
+                );
+
+                return;
+            }
+
+            if (grid.getEnd() == null) {
+
+                showError(
+                        "Arrivée manquante",
+                        "Veuillez placer l'arrivée avant de lancer l'algorithme."
+                );
+
+                return;
+            }
 
         if (animation != null) {
 
@@ -624,25 +788,10 @@ public class MainController {
                 / 1_000_000.0;
 
 
-        exploredLabel.setText(
-                String.valueOf(
-                        result.getExploredCells().size()
-                )
-        );
-
-
-        pathLengthLabel.setText(
-                String.valueOf(
-                        result.getPath().size()
-                )
-        );
-
-
-        timeLabel.setText(
-                String.format(
-                        "%.3f ms",
-                        executionTime
-                )
+        updateResultTable(
+                selected,
+                result,
+                executionTime
         );
 
 
@@ -692,16 +841,35 @@ public class MainController {
 
     private void runAllAlgorithms() {
 
-        if (grid.getStart() == null
-                || grid.getEnd() == null) {
+        if (grid.getStart() == null && grid.getEnd() == null) {
 
-            System.out.println(
-                    "Veuillez placer un départ et une arrivée."
+            showError(
+                    "Départ et arrivée manquants",
+                    "Veuillez placer le départ et l'arrivée avant de lancer la comparaison."
             );
 
             return;
         }
 
+        if (grid.getStart() == null) {
+
+            showError(
+                    "Départ manquant",
+                    "Veuillez placer le départ avant de lancer la comparaison."
+            );
+
+            return;
+        }
+
+        if (grid.getEnd() == null) {
+
+            showError(
+                    "Arrivée manquante",
+                    "Veuillez placer l'arrivée avant de lancer la comparaison."
+            );
+
+            return;
+        }
 
         if (animation != null) {
 
@@ -718,10 +886,8 @@ public class MainController {
 
         compareButton.setDisable(true);
         launchButton.setDisable(true);
-        startButton.setDisable(true);
-        endButton.setDisable(true);
+        positionButton.setDisable(true);
         resetButton.setDisable(true);
-
 
         System.out.println();
         System.out.println(
@@ -885,26 +1051,29 @@ public class MainController {
 
                         Platform.runLater(() -> {
 
-                            printArrivalOrder(
-                                    results
+                        printArrivalOrder(
+                                results
+                        );
+
+
+                        for (AlgorithmResult algorithmResult : results) {
+
+                            updateResultTable(
+                                    algorithmResult.getAlgorithm(),
+                                    algorithmResult.getResult(),
+                                    algorithmResult.getExecutionTime()
                             );
+                        }
 
 
-                            saveComparisonResults(
-                                    results
-                            );
+                        saveComparisonResults(
+                                results
+                        );
 
-
-                            /*
-                             * UNE SEULE ANIMATION
-                             *
-                             * Les 4 algorithmes sont affichés
-                             * ensemble.
-                             */
-                            animateAllAlgorithms(
-                                    results
-                            );
-                        });
+    animateAllAlgorithms(
+            results
+    );
+});
 
 
                     } catch (Exception e) {
@@ -1293,12 +1462,6 @@ public class MainController {
         animation.setOnFinished(event -> {
 
             enableButtons();
-
-
-            displayArrivalOrder(
-                    results
-            );
-
 
             System.out.println(
                     "Animation terminée."
@@ -1790,145 +1953,6 @@ public class MainController {
 
 
         animation.play();
-    }
-
-
-    // =========================================================
-    // AFFICHER ORDRE ARRIVEE
-    // =========================================================
-
-    private void displayArrivalOrder(
-            List<AlgorithmResult> results) {
-
-        if (results.isEmpty()) {
-
-            return;
-        }
-
-
-        StringBuilder message =
-                new StringBuilder();
-
-
-        message.append(
-                "ORDRE D'ARRIVÉE\n\n"
-        );
-
-
-        for (int i = 0;
-                i < results.size();
-                i++) {
-
-
-            AlgorithmResult current =
-                    results.get(i);
-
-
-            String position;
-
-
-            if (i == 0) {
-
-                position = "🥇 1er";
-
-            } else if (i == 1) {
-
-                position = "🥈 2e";
-
-            } else if (i == 2) {
-
-                position = "🥉 3e";
-
-            } else {
-
-                position = "4e";
-            }
-
-
-            message.append(
-                    position
-            );
-
-
-            message.append(
-                    " : "
-            );
-
-
-            message.append(
-                    getAlgorithmName(
-                            current.getAlgorithm()
-                    )
-            );
-
-
-            message.append(
-                    "\nTemps : "
-            );
-
-
-            message.append(
-                    String.format(
-                            "%.3f ms",
-                            current.getExecutionTime()
-                    )
-            );
-
-
-            message.append(
-                    "\nCases explorées : "
-            );
-
-
-            message.append(
-                    current
-                            .getResult()
-                            .getExploredCells()
-                            .size()
-            );
-
-
-            message.append(
-                    "\nChemin : "
-            );
-
-
-            message.append(
-                    current
-                            .getResult()
-                            .getPath()
-                            .size()
-            );
-
-
-            message.append(
-                    "\n\n"
-            );
-        }
-
-
-        Alert alert =
-                new Alert(
-                        Alert.AlertType.INFORMATION
-                );
-
-
-        alert.setTitle(
-                "Comparaison des algorithmes"
-        );
-
-
-        alert.setHeaderText(
-                "🏁 Ordre d'arrivée"
-        );
-
-
-        alert.setContentText(
-                message.toString()
-        );
-
-
-        alert.show();
     }
 
 
@@ -2539,23 +2563,17 @@ public class MainController {
         endCell = null;
 
 
-        placingStart = false;
-        placingEnd = false;
+        placementStep = 0;
 
+        for (ResultRow row : resultRows) {
 
-        exploredLabel.setText(
-                "0"
-        );
+            row.setExplored(null);
+            row.setPathLength(null);
+            row.setExecutionTime("—");
+            row.setRank("—");
+        }
 
-
-        pathLengthLabel.setText(
-                "0"
-        );
-
-
-        timeLabel.setText(
-                "0 ms"
-        );
+        resultTable.refresh();
 
 
         visualCells =
@@ -2586,13 +2604,10 @@ public class MainController {
 
         launchButton.setDisable(false);
 
-        startButton.setDisable(false);
-
-        endButton.setDisable(false);
+        positionButton.setDisable(false);
 
         resetButton.setDisable(false);
     }
-
 
     // =========================================================
     // MESSAGE ERREUR
@@ -2626,7 +2641,78 @@ public class MainController {
         alert.showAndWait();
     }
 
+private void sortResultsByPerformance() {
 
+    FXCollections.sort(
+            resultRows,
+            (row1, row2) -> {
+
+                // Algorithmes non exécutés en bas
+                if (row1.getPathLength() == null
+                        && row2.getPathLength() == null) {
+                    return 0;
+                }
+
+                if (row1.getPathLength() == null) {
+                    return 1;
+                }
+
+                if (row2.getPathLength() == null) {
+                    return -1;
+                }
+
+                // 1er critère : chemin le plus court
+                int comparison = Integer.compare(
+                        row1.getPathLength(),
+                        row2.getPathLength()
+                );
+
+                // 2e critère : moins de cases explorées
+                if (comparison == 0) {
+                    comparison = Integer.compare(
+                            row1.getExplored(),
+                            row2.getExplored()
+                    );
+                }
+
+                return comparison;
+            }
+    );
+
+    // Ajouter 1er, 2e, 3e, 4e
+    int rank = 1;
+
+    for (ResultRow row : resultRows) {
+
+        if (row.getPathLength() == null) {
+            row.setRank("—");
+            continue;
+        }
+
+        switch (rank) {
+            case 1:
+                row.setRank("1er");
+                break;
+
+            case 2:
+                row.setRank("2e");
+                break;
+
+            case 3:
+                row.setRank("3e");
+                break;
+
+            case 4:
+                row.setRank("4e");
+                break;
+        }
+
+        rank++;
+    }
+
+    resultTable.refresh();
+}
+    
     // =========================================================
     // STYLE DES CASES
     // =========================================================
@@ -2717,4 +2803,42 @@ public class MainController {
                 break;
         }
     }
+    
+    private void updateResultTable(
+        AlgorithmType algorithm,
+        PathResult result,
+        double executionTime) {
+
+    String algorithmName =
+            getAlgorithmName(algorithm);
+
+
+    for (ResultRow row : resultRows) {
+
+        if (row.getAlgorithm().equals(algorithmName)) {
+
+            row.setExplored(
+                    result.getExploredCells().size()
+            );
+
+            row.setPathLength(
+                    result.getPath().size()
+            );
+
+            row.setExecutionTime(
+                    String.format(
+                            "%.3f ms",
+                            executionTime
+                    )
+            );
+
+            break;
+        }
+    }
+
+    sortResultsByPerformance();
+    resultTable.refresh();
+}
+    
+
 }
